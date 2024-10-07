@@ -1,0 +1,84 @@
+name: Release Prod
+
+on:
+  release:
+    types: [published]
+
+env:
+  NPM_TOKEN: ${{secrets.NPM_TOKEN}}
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+  SENTRY_AUTH_TOKEN: ${{secrets.SENTRY_AUTH_TOKEN}}
+  AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID_PROD}}
+  AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY_PROD}}
+  AWS_REGION: ${{secrets.AWS_REGION}}
+  CI: true
+  IS_RELEASE: true
+  APP_STAGE: 'production'
+  GH_PAT: ${{ secrets.GH_PAT }}
+  DEVOPS_OIDC_ROLE: ${{ secrets.DEVOPS_OIDC_ROLE }}
+  DEVOPS_BUCKET_ROLE: ${{ secrets.DEVOPS_BUCKET_ROLE }}
+  DEVOPS_PRIMARY_REGION: ${{ secrets.DEVOPS_PRIMARY_REGION }}
+  DEVOPS_ARTIFACT_BUCKET: ${{ secrets.DEVOPS_ARTIFACT_BUCKET }}
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  release-prod:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Get Tag
+        uses: olegtarasov/get-tag@v2.1
+        id: tagName
+        with:
+          tagRegex: '(?<package>.*)_(?<version>.*)'
+
+      - name: Set Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+
+      - name: Set Version
+        run: |
+          echo "RELEASE_VERSION=${{ steps.tagName.outputs.package }}_${{ steps.tagName.outputs.version }}" >> $GITHUB_ENV
+
+      - name: Install
+        run: yarn
+
+      - name: Fetch config
+        run: |
+          yarn conf --name production
+
+      - name: Lint
+        run: |
+          yarn lint
+
+      - name: Test
+        run: |
+          yarn test --watch=false --ci --silent --forceExit --detectOpenHandles --runInBand
+
+      - name: Build
+        run: |
+          yarn build
+
+      - name: Package Version Bump
+        run: |
+          yarn version ${{ steps.tagName.outputs.version }}
+
+      - name: Commit
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: 'chore: bump ${{ steps.tagName.outputs.package }} version'
+          branch: master
+
+      - name: Publish
+        run: |
+          yarn publish --tag latest
