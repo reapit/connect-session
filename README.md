@@ -6,7 +6,10 @@ A thin wrapper around the Reapit Connect OAuth API.
 
 Managing OAuth flows can be tricky, especially redirecting, keeping sessions refreshed and cached in memory. To make this process easier, we have built the Connect Session module for any JavaScript app.
 
-To get started run `yarn add @reapit/connect-session`
+To get started run
+```bash
+$ yarn add @reapit/connect-session
+```
 
 Then follow the steps for either browsers, React or NodeJS below. For full documentaion [here](https://foundations-documentation.reapit.cloud/app-development/connect-session).
 
