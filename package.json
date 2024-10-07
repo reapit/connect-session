@@ -29,7 +29,7 @@
     "test": "cross-env TZ=UTC jest --watch --colors --silent",
     "build": "cross-env NODE_ENV=production && rimraf dist && rollup -c",
     "lint": "eslint --cache --ext=ts,tsx,js src",
-    "check": "tsc --noEmit --skipLibCheck",
+    "checkTypes": "tsc --noEmit --skipLibCheck",
     "release": "echo '...skipping...'",
     "deploy": "echo '...skipping...'",
     "publish": "yarn npm publish --access public",
@@ -59,6 +59,8 @@
     "@rollup/plugin-typescript": "^11.1.6",
     "@testing-library/react-hooks": "^8.0.1",
     "@types/base-64": "^1.0.2",
+    "@types/jest": "^29.5.13",
+    "@types/react": "^18.3.11",
     "@types/text-encoding": "^0",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
@@ -72,7 +74,6 @@
     "rimraf": "^5.0.5",
     "rollup": "^4.13.0",
     "snyk": "^1.1285.0",
-    "ts-jest": "^29.1.2",
     "typescript": "^5.4.2"
   },
   "browserslist": [
@@ -80,5 +81,6 @@
     "not IE 11",
     "maintained node versions"
   ],
-  "snyk": false
+  "snyk": false,
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
