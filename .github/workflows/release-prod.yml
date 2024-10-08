@@ -7,21 +7,11 @@ on:
 env:
   NPM_TOKEN: ${{secrets.NPM_TOKEN}}
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-  SENTRY_AUTH_TOKEN: ${{secrets.SENTRY_AUTH_TOKEN}}
-  AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID_PROD}}
-  AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY_PROD}}
-  AWS_REGION: ${{secrets.AWS_REGION}}
   CI: true
   IS_RELEASE: true
-  APP_STAGE: 'production'
-  GH_PAT: ${{ secrets.GH_PAT }}
-  DEVOPS_OIDC_ROLE: ${{ secrets.DEVOPS_OIDC_ROLE }}
-  DEVOPS_BUCKET_ROLE: ${{ secrets.DEVOPS_BUCKET_ROLE }}
-  DEVOPS_PRIMARY_REGION: ${{ secrets.DEVOPS_PRIMARY_REGION }}
-  DEVOPS_ARTIFACT_BUCKET: ${{ secrets.DEVOPS_ARTIFACT_BUCKET }}
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 jobs:
