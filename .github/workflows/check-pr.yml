@@ -35,4 +35,4 @@ jobs:
 
       - name: TypeCheck
         run: |
-          yarn check
+          yarn checkTypes
