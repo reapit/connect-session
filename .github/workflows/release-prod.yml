@@ -68,7 +68,7 @@ jobs:
 
       - name: Package Version Bump
         run: |
-          yarn version ${{ steps.tagName.outputs.version }}
+          yarn version --new-version ${{ steps.tagName.outputs.version }} --no-git-tag-version
 
       - name: Commit
         uses: stefanzweifel/git-auto-commit-action@v4
