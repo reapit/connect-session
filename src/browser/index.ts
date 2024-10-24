@@ -282,7 +282,7 @@ export class ReapitConnectBrowserSession {
     this.refreshTokenStorage.setItem(stateNonce, internalRedirectPath)
     const code_challenge = await this.encryptCodeVerifier(this.codeVerifier(stateNonce))
 
-    let location = `${this.connectOAuthUrl}/authorize?response_type=code&client_id=${this.connectClientId}&redirect_uri=${authRedirectUri}&state=${stateNonce}`
+    let location = `${this.connectOAuthUrl}/oauth/authorize?response_type=code&scope=offline_access+openid+profile+email&client_id=${this.connectClientId}&redirect_uri=${authRedirectUri}&state=${stateNonce}`
     if (this.usePKCE) location += `&code_challenge_method=S256&code_challenge=${code_challenge}`
 
     window.location.href = location
@@ -293,7 +293,8 @@ export class ReapitConnectBrowserSession {
   public connectLoginRedirect(redirectUri?: string): void {
     const loginRedirectUri = redirectUri || this.connectLoginRedirectPath
     this.clearRefreshToken()
-    window.location.href = `${this.connectOAuthUrl}/login?response_type=code&client_id=${this.connectClientId}&redirect_uri=${loginRedirectUri}`
+    const stateNonce = uuid()
+    window.location.href = `${this.connectOAuthUrl}/oauth/authorize?response_type=code&scope=offline_access+openid+profile+email&client_id=${this.connectClientId}&state=${stateNonce}&redirect_uri=${loginRedirectUri}`
   }
 
   // Handles redirect to logout - defaults to constructor login uri but I can override if I like.
@@ -301,7 +302,7 @@ export class ReapitConnectBrowserSession {
   public connectLogoutRedirect(redirectUri?: string): void {
     const logoutRedirectUri = redirectUri || this.connectLogoutRedirectPath
     this.clearRefreshToken()
-    window.location.href = `${this.connectOAuthUrl}/logout?client_id=${this.connectClientId}&logout_uri=${logoutRedirectUri}`
+    window.location.href = `${this.connectOAuthUrl}/oidc/logout?client_id=${this.connectClientId}&post_logout_redirect_uri=${logoutRedirectUri}`
   }
 
   public connectClearSession(): void {
@@ -327,7 +328,7 @@ export class ReapitConnectBrowserSession {
       // See comment in connectGetSession method. If I have a refresh token, I want to use this in the
       // first instance - get the refresh endpoint. Otherwise check to see if I have a code and get
       // the code endpoint so I can exchange for a token
-      const endpoint = `${this.connectOAuthUrl}/token`
+      const endpoint = `${this.connectOAuthUrl}/oauth/token`
 
       // I don't have either a refresh token or a code so redirect to the authorization endpoint to get
       // a code I can exchange for a token
