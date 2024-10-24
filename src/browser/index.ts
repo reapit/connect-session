@@ -328,7 +328,7 @@ export class ReapitConnectBrowserSession {
       // See comment in connectGetSession method. If I have a refresh token, I want to use this in the
       // first instance - get the refresh endpoint. Otherwise check to see if I have a code and get
       // the code endpoint so I can exchange for a token
-      const endpoint = `${this.connectOAuthUrl}/token`
+      const endpoint = `${this.connectOAuthUrl}/oauth/token`
 
       // I don't have either a refresh token or a code so redirect to the authorization endpoint to get
       // a code I can exchange for a token
