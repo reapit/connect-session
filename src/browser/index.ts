@@ -1,8 +1,12 @@
-import { ReapitConnectBrowserSessionInitializers, ReapitConnectSession } from 'src/types'
+import { ReapitConnectBrowserSessionInitializers, ReapitConnectSession } from '../types'
 
-import { Auth0Client, GenericError } from '@auth0/auth0-spa-js'
+import { Auth0Client, RedirectLoginResult } from '@auth0/auth0-spa-js'
 import { sessionStorageCache } from './session-storage-cache'
 import { idTokenToLoginIdentity } from './id-token'
+
+type AppState = Partial<{
+  internalRedirectPath: string
+}>
 
 export class ReapitConnectBrowserSession {
   public static readonly GLOBAL_KEY = '__REAPIT_MARKETPLACE_GLOBALS__'
@@ -18,6 +22,7 @@ export class ReapitConnectBrowserSession {
   private connectApplicationTimeout: number
   public isAuthenticated: boolean = false
   private idleTimeoutCountdown: number
+  private forceRefetch: boolean = false
 
   constructor({
     connectClientId,
@@ -28,8 +33,9 @@ export class ReapitConnectBrowserSession {
     usePKCE = true,
   }: ReapitConnectBrowserSessionInitializers) {
     if (!usePKCE) {
-      console.warn('PKCE requested to be disabled but is now mandatory.')
+      console.info('PKCE requested to be disabled but is now always used.')
     }
+
     this.connectApplicationTimeout = connectApplicationTimeout ?? ReapitConnectBrowserSession.APP_DEFAULT_TIMEOUT
     this.idleTimeoutCountdown = this.connectApplicationTimeout
     this.redirect_uri = `${window.location.origin}${connectLoginRedirectPath || ''}`
@@ -45,6 +51,8 @@ export class ReapitConnectBrowserSession {
         redirect_uri: this.redirect_uri,
       },
       useRefreshTokens: true,
+
+      // use session storage provider if in AC, otherwise fall back to configured cache location
       cache: this.connectIsDesktop ? sessionStorageCache : undefined,
       cacheLocation: 'localstorage',
     })
@@ -90,7 +98,7 @@ export class ReapitConnectBrowserSession {
     const params = new URLSearchParams(window.location.search)
     params.delete('code')
     const search = params ? `?${params.toString()}` : ''
-    const internalRedirectPath = encodeURIComponent(`${window.location.pathname}${search}`)
+    const internalRedirectPath = `${window.location.pathname}${search}`
 
     await this.auth0Client.loginWithRedirect({
       appState: {
@@ -115,50 +123,53 @@ export class ReapitConnectBrowserSession {
   }
 
   public connectClearSession(): void {
-    console.warn('connectClearSession is deprecated and no longer works')
+    this.forceRefetch = true
   }
 
   private async currentSession(): Promise<ReapitConnectSession | void> {
-    if (await this.auth0Client.isAuthenticated()) {
-      this.isAuthenticated = true
-      // create reapit connect session and return
-      const accessToken = await this.auth0Client.getTokenSilently()
+    if (!await this.auth0Client.isAuthenticated()) {
+      throw new Error('unauthenticated')
+    }
 
-      const idToken = await this.auth0Client.getIdTokenClaims()
-      if (!idToken) {
-        throw new Error('id token not present')
-      }
+    const accessToken = await this.auth0Client.getTokenSilently({
+      cacheMode: this.forceRefetch ? 'off' : 'on',
+    })
 
-      return {
-        accessToken,
-        idToken: idToken?.__raw,
-        loginIdentity: idTokenToLoginIdentity(idToken),
-        refreshToken: 'deprecated',
-      }
-    } else {
-      this.isAuthenticated = false
-      await this.connectAuthorizeRedirect()
+    this.forceRefetch = false
+
+    const idToken = await this.auth0Client.getIdTokenClaims()
+    if (!idToken) {
+      throw new Error('id token not present')
+    }
+
+    return {
+      accessToken,
+      idToken: idToken?.__raw,
+      loginIdentity: idTokenToLoginIdentity(idToken),
+      refreshToken: 'donotuse',
     }
   }
 
-  public async connectSession(): Promise<ReapitConnectSession | void> {
-    const hasCode = window.location.search ? !!new URLSearchParams(window.location.search).get('code') : false
+  private handledCodes: Record<string, Promise<RedirectLoginResult<AppState>>> = {}
 
-    if (hasCode) {
-      const { appState } = await this.auth0Client.handleRedirectCallback<{
-        internalRedirectPath?: string
-      }>()
+  public async connectSession(): Promise<ReapitConnectSession | void> {
+    const code = new URLSearchParams(window.location.search).get('code')
+    if (code) {
+      if (!this.handledCodes[code]) {
+        this.handledCodes[code] = this.auth0Client.handleRedirectCallback<AppState>()
+      }
+
+      const { appState } = await this.handledCodes[code]
       this.connectInternalRedirect = appState?.internalRedirectPath || null
     }
 
     try {
-      await this.auth0Client.getTokenSilently()
-    } catch (error) {
-      if ((error as GenericError).error !== 'login_required') {
-        throw error
-      }
+      const session = await this.currentSession()
+      this.isAuthenticated = true
+      return session
+    } catch {
+      this.isAuthenticated = false
+      await this.connectAuthorizeRedirect()
     }
-
-    return this.currentSession()
   }
 }

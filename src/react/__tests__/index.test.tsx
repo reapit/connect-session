@@ -2,7 +2,10 @@ import { renderHook } from '@testing-library/react-hooks'
 import { useReapitConnect } from '../index'
 import { ReapitConnectHook } from '../../types'
 import { ReapitConnectBrowserSession } from '../../browser'
-import { mockBrowserSession } from '../../__mocks__/session'
+
+const mockBrowserSession = {
+  aSession: 'here',
+}
 
 jest.mock('../../browser/index', () => ({
   ReapitConnectBrowserSession: jest.fn(() => ({
