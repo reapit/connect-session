@@ -23,6 +23,8 @@ export class ReapitConnectBrowserSession {
   public isAuthenticated: boolean = false
   private idleTimeoutCountdown: number
   private forceRefetch: boolean = false
+  private connectClientId: string
+  private connectOAuthUrl: string
 
   constructor({
     connectClientId,
@@ -42,6 +44,9 @@ export class ReapitConnectBrowserSession {
     this.returnTo = `${window.location.origin}${
       connectLogoutRedirectPath || connectLogoutRedirectPath === '' ? connectLogoutRedirectPath : '/login'
     }`
+
+    this.connectClientId = connectClientId
+    this.connectOAuthUrl = connectOAuthUrl
 
     this.connectInternalRedirect = null
     this.auth0Client = new Auth0Client({
@@ -116,9 +121,13 @@ export class ReapitConnectBrowserSession {
 
   public connectLogoutRedirect(redirectUri?: string): void {
     this.auth0Client.logout({
-      logoutParams: {
-        returnTo: redirectUri || this.returnTo,
-      },
+      openUrl: false,
+    })
+    
+
+    window.location.href = this.connectOAuthUrl + '/oidc/logout?' + new URLSearchParams({
+      post_logout_redirect_uri: redirectUri || this.returnTo,
+      client_id: this.connectClientId,
     })
   }
 
