@@ -4,6 +4,7 @@ import { jestGlobalConfig } from '@reapit/ts-scripts'
 
 const config: JestConfigWithTsJest = {
   ...jestGlobalConfig,
+  setupFiles: [],
   coverageReporters: ['json-summary', 'text', 'lcov'],
   projects: undefined,
   verbose: undefined,

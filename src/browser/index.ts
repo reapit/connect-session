@@ -124,10 +124,13 @@ export class ReapitConnectBrowserSession {
       openUrl: false,
     })
 
-    window.location.href = this.connectOAuthUrl + '/oidc/logout?' + new URLSearchParams({
-      post_logout_redirect_uri: redirectUri || this.returnTo,
-      client_id: this.connectClientId,
-    })
+    window.location.href =
+      this.connectOAuthUrl +
+      '/oidc/logout?' +
+      new URLSearchParams({
+        post_logout_redirect_uri: redirectUri || this.returnTo,
+        client_id: this.connectClientId,
+      })
   }
 
   public connectClearSession(): void {
@@ -135,7 +138,7 @@ export class ReapitConnectBrowserSession {
   }
 
   private async currentSession(): Promise<ReapitConnectSession | void> {
-    if (!await this.auth0Client.isAuthenticated()) {
+    if (!(await this.auth0Client.isAuthenticated())) {
       throw new Error('unauthenticated')
     }
 
