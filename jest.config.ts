@@ -1,9 +1,13 @@
-const { pathsToModuleNameMapper } = require('ts-jest')
-const { compilerOptions } = require('./tsconfig.json')
-const { jestGlobalConfig } = require('@reapit/ts-scripts')
+import { pathsToModuleNameMapper, JestConfigWithTsJest } from 'ts-jest'
+import { compilerOptions } from './tsconfig.json'
+import { jestGlobalConfig } from '@reapit/ts-scripts'
 
-module.exports = {
+const config: JestConfigWithTsJest = {
   ...jestGlobalConfig,
+  coverageReporters: ['json-summary', 'text', 'lcov'],
+  projects: undefined,
+  verbose: undefined,
+  reporters: ['default'],
   modulePathIgnorePatterns: ['<rootDir>[/\\\\](node_modules|public|dist)[/\\\\]'],
   moduleNameMapper: {
     ...pathsToModuleNameMapper(compilerOptions.paths, {
@@ -25,3 +29,5 @@ module.exports = {
     },
   },
 }
+
+export default config
