@@ -123,7 +123,6 @@ export class ReapitConnectBrowserSession {
     this.auth0Client.logout({
       openUrl: false,
     })
-    
 
     window.location.href = this.connectOAuthUrl + '/oidc/logout?' + new URLSearchParams({
       post_logout_redirect_uri: redirectUri || this.returnTo,
